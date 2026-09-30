@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GEMS Telemedicine Clinic - Student Health Portal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- jsPDF Library for Digital PDF Prescriptions & Bills -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            clinic: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            accent: '#10b981'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 font-sans">
+
+  <!-- TOP NOTICE BAR -->
+  <div class="bg-clinic-700 text-white text-xs py-2 px-4 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+      <span><i class="fa-solid fa-phone mr-1"></i> Emergency: <strong>+91 7520356377</strong></span>
+      <span class="hidden md:inline"><i class="fa-solid fa-clock mr-1"></i> Hours: 8:00 AM - 8:00 PM (Mon-Sat)</span>
+    </div>
+    <div class="flex items-center space-x-3">
+      <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-clinic-800 text-white text-xs px-2 py-1 rounded border border-clinic-600 outline-none">
+        <option value="en">English</option>
+        <option value="hi">हिंदी (Hindi)</option>
+        <option value="mr">मराठी (Marathi)</option>
+      </select>
+      <button onclick="toggleDarkMode()" class="p-1 rounded bg-clinic-800 hover:bg-clinic-600 text-xs">
+        <i class="fa-solid fa-moon" id="darkIcon"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- NAVIGATION HEADER -->
+  <nav class="sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur border-b border-slate-200 dark:border-slate-700 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+      <!-- LOGO AND WEBSITE NAME -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="showSection('home')">
+        <div class="bg-clinic-600 text-white p-1 rounded-xl shadow-md flex items-center justify-center overflow-hidden w-12 h-12">
+          <img src="WhatsApp Image 2026-09-27 at 8.53.55 AM.jpeg" alt="GEMS Logo" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/2966/2966327.png';" />
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-clinic-700 dark:text-clinic-500">GEMS Telemedicine Clinic</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">College Medical Services</p>
+        </div>
+      </div>
+
+      <!-- Desktop Links -->
+      <div class="hidden lg:flex items-center space-x-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
+        <button onclick="showSection('home')" class="hover:text-clinic-600 transition">Home</button>
+        <button onclick="showSection('services')" class="hover:text-clinic-600 transition">Services</button>
+        <button onclick="showSection('doctors')" class="hover:text-clinic-600 transition">Doctors</button>
+        <button id="adminStudentsNavBtn" onclick="showSection('adminStudents')" class="hidden hover:text-clinic-600 transition text-amber-600 font-bold"><i class="fa-solid fa-users-gear mr-1"></i>Students DB</button>
+        <button onclick="showSection('medicines')" class="hover:text-clinic-600 transition">Medicines</button>
+        <button onclick="showSection('camps')" class="hover:text-clinic-600 transition">Health Camps</button>
+        <button onclick="showSection('emergency')" class="text-red-600 font-bold hover:text-red-700 transition"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Emergency</button>
+      </div>
+
+      <!-- Auth Controls -->
+      <div class="flex items-center space-x-3">
+        <div id="loggedOutButtons" class="flex space-x-2">
+          <button onclick="openModal('loginModal')" class="px-3 py-1.5 text-xs sm:text-sm font-semibold text-clinic-600 border border-clinic-600 rounded-lg hover:bg-clinic-50 transition">
+            Login
+          </button>
+          <button onclick="openModal('registerModal')" class="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-clinic-600 text-white rounded-lg hover:bg-clinic-700 transition shadow">
+            Register
+          </button>
+        </div>
+        <div id="loggedInUser" class="hidden flex items-center space-x-2">
+          <button onclick="navigateToCurrentDashboard()" class="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center space-x-2 hover:bg-slate-200 transition">
+            <span id="userAvatarContainer"></span>
+            <span id="userNameDisplay">User</span>
+            <span id="userRoleBadge" class="bg-clinic-600 text-white text-[10px] px-1.5 py-0.5 rounded">Role</span>
+          </button>
+          <button onclick="logout()" class="text-xs px-2 py-1.5 text-red-500 hover:text-red-700 font-semibold" title="Logout">
+            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- NOTIFICATION BANNER / TOAST HOLDER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2"></div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main id="mainContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- HERO / HOMEPAGE -->
+    <section id="homeSection" class="space-y-12">
+      <div class="relative bg-gradient-to-br from-clinic-700 to-clinic-900 rounded-3xl text-white p-8 sm:p-12 shadow-xl overflow-hidden">
+        <div class="relative z-10 max-w-2xl space-y-4">
+          <span class="bg-clinic-500/30 text-clinic-100 text-xs px-3 py-1 rounded-full font-semibold border border-clinic-400/30">Official Student Healthcare Portal</span>
+          <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Your Health, Our Priority</h2>
+          <p class="text-clinic-100 text-sm sm:text-base leading-relaxed">
+            Accessible, confidential, and professional medical services right here on campus. Book appointments, download digital prescriptions, or check live queue times instantly.
+          </p>
+          <div class="flex flex-wrap gap-4 pt-2">
+            <button onclick="handleQuickBook()" class="px-6 py-3 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-emerald-600 transition flex items-center space-x-2">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Book Appointment</span>
+            </button>
+            <button onclick="showSection('emergency')" class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg hover:bg-red-700 transition flex items-center space-x-2">
+              <i class="fa-solid fa-phone-volume"></i>
+              <span>Emergency Help</span>
+            </button>
+          </div>
+        </div>
+        <div class="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-10 translate-y-10">
+          <i class="fa-solid fa-heart-pulse text-[350px]"></i>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+          <i class="fa-solid fa-user-doctor text-3xl text-clinic-600 mb-2"></i>
+          <h4 class="text-xl font-bold">12+</h4>
+          <p class="text-xs text-slate-500">Campus Doctors</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+          <i class="fa-solid fa-clock text-3xl text-accent mb-2"></i>
+          <h4 class="text-xl font-bold">&lt; 15 Mins</h4>
+          <p class="text-xs text-slate-500">Avg. Queue Wait</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+          <i class="fa-solid fa-prescription-bottle-medical text-3xl text-purple-600 mb-2"></i>
+          <h4 class="text-xl font-bold">100%</h4>
+          <p class="text-xs text-slate-500">Digital Prescriptions</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+          <i class="fa-solid fa-shield-halved text-3xl text-amber-500 mb-2"></i>
+          <h4 class="text-xl font-bold">Encrypted</h4>
+          <p class="text-xs text-slate-500">Private Records</p>
+        </div>
+      </div>
+
+      <!-- Announcements & OPD Tracker -->
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-3">
+            <h3 class="font-bold text-lg flex items-center text-clinic-700 dark:text-clinic-500">
+              <i class="fa-solid fa-bullhorn mr-2"></i> Campus Health Announcements
+            </h3>
+            <span class="text-xs text-slate-400">Updated via Admin & Doctor</span>
+          </div>
+          <div class="space-y-3">
+            <div class="p-3 bg-clinic-50 dark:bg-slate-700/50 rounded-xl border border-clinic-100 dark:border-slate-600 flex justify-between items-start">
+              <div>
+                <span class="text-xs font-bold bg-clinic-600 text-white px-2 py-0.5 rounded">CAMP</span>
+                <h5 class="font-semibold text-sm mt-1">Free Annual Student Eye & Vision Screening</h5>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Date: Sept 28 - Oct 01 | Venue: Main Auditorium</p>
+              </div>
+              <button onclick="showSection('camps')" class="text-xs font-bold text-clinic-600 hover:underline">Register</button>
+            </div>
+            <div class="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/40 flex justify-between items-start">
+              <div>
+                <span class="text-xs font-bold bg-amber-600 text-white px-2 py-0.5 rounded">ADVISORY</span>
+                <h5 class="font-semibold text-sm mt-1">Seasonal Flu & Cold Advisory</h5>
+                <p class="text-xs text-slate-600 dark:text-slate-400">Students experiencing fever or chills are encouraged to book early consultations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-lg flex items-center text-clinic-700 dark:text-clinic-500">
+              <i class="fa-solid fa-list-ol mr-2"></i> Live Clinic Tracker
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Real-time outpatient OPD status.</p>
+          </div>
+          <div class="text-center py-4 bg-slate-50 dark:bg-slate-700 rounded-2xl border border-slate-200 dark:border-slate-600">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Now Serving Token</span>
+            <div class="text-5xl font-black text-clinic-600 my-1" id="liveTokenDisplay">A-14</div>
+            <p class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-circle text-[8px] animate-pulse mr-1"></i> Doctor Room 03 Active</p>
+          </div>
+          <button onclick="openModal('checkInModal')" class="w-full py-2.5 bg-slate-800 dark:bg-slate-700 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Scan QR Check-In</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section id="servicesSection" class="hidden space-y-6">
+      <div class="border-b border-slate-200 dark:border-slate-700 pb-4">
+        <h2 class="text-2xl font-bold">Medical & Health Services</h2>
+        <p class="text-sm text-slate-500">Comprehensive healthcare services designed specifically for university students and campus staff.</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="servicesGrid"></div>
+    </section>
+
+    <!-- DOCTORS SECTION -->
+    <section id="doctorsSection" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
+        <div>
+          <h2 class="text-2xl font-bold">Available Campus Doctors</h2>
+          <p class="text-sm text-slate-500">Consult with experienced healthcare professionals on campus.</p>
+        </div>
+        <div class="flex space-x-2">
+          <input type="text" id="doctorSearchInput" onkeyup="filterDoctors()" placeholder="Search doctor or specialization..." class="px-3 py-2 text-xs border rounded-xl dark:bg-slate-800 dark:border-slate-700 outline-none w-64"/>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="doctorsGrid"></div>
+    </section>
+
+    <!-- EXCLUSIVE ADMIN STUDENT DATABASE SECTION -->
+    <section id="adminStudentsSection" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-4">
+          <div>
+            <h2 class="text-2xl font-bold flex items-center text-clinic-700 dark:text-clinic-500">
+              <i class="fa-solid fa-user-graduate mr-2"></i> Dedicated Student Database (Admin Exclusive)
+            </h2>
+            <p class="text-xs text-slate-500">Manage registered student profiles, verify department details, and delete entries if required.</p>
+          </div>
+          <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-bold">Admin Privileged View</span>
+        </div>
+        <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
+              <tr>
+                <th class="p-3">Profile Photo</th>
+                <th class="p-3">Student Name</th>
+                <th class="p-3">Student Roll ID</th>
+                <th class="p-3">Department / Branch</th>
+                <th class="p-3">Email</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dedicatedStudentTable" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEDICINES LIBRARY SECTION -->
+    <section id="medicinesSection" class="hidden space-y-6">
+      <div class="border-b border-slate-200 dark:border-slate-700 pb-4">
+        <h2 class="text-2xl font-bold">Campus Pharmacy & Medicine Directory</h2>
+        <p class="text-sm text-slate-500">Informational database of common medicines. Prescriptions required for issuance.</p>
+      </div>
+      <div class="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-center space-x-3">
+        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+        <span><strong>Important Disclaimer:</strong> This directory is for educational reference only. Do NOT self-medicate. Always consult a registered clinic doctor before taking any medication.</span>
+      </div>
+      <div class="flex space-x-2">
+        <input type="text" id="medicineSearchInput" onkeyup="filterMedicines()" placeholder="Search medicine name or symptom..." class="w-full sm:w-80 px-3 py-2 text-xs border rounded-xl dark:bg-slate-800 dark:border-slate-700 outline-none"/>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="medicinesGrid"></div>
+    </section>
+
+    <!-- HEALTH CAMPS SECTION -->
+    <section id="campsSection" class="hidden space-y-6">
+      <div class="border-b border-slate-200 dark:border-slate-700 pb-4">
+        <h2 class="text-2xl font-bold">Health Camps & Events</h2>
+        <p class="text-sm text-slate-500">Free preventive health drives, checkups, and vaccination camps for students.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6" id="campsGrid"></div>
+    </section>
+
+    <!-- EMERGENCY SECTION -->
+    <section id="emergencySection" class="hidden space-y-6">
+      <div class="bg-red-50 dark:bg-red-950/40 border-2 border-red-500 p-6 sm:p-8 rounded-3xl space-y-6">
+        <div class="flex items-center space-x-4">
+          <div class="p-4 bg-red-600 text-white rounded-2xl animate-pulse">
+            <i class="fa-solid fa-truck-medical text-3xl"></i>
+          </div>
+          <div>
+            <h2 class="text-2xl font-black text-red-600 dark:text-red-400 uppercase tracking-wide">Campus Medical Emergency</h2>
+            <p class="text-xs text-red-700 dark:text-red-300 font-medium">Immediate response unit active 24/7 on campus grounds.</p>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-4">
+          <a href="tel:+917520356377" class="p-4 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900 rounded-2xl shadow-sm text-center block hover:shadow-md transition">
+            <i class="fa-solid fa-phone text-2xl text-red-600 mb-1"></i>
+            <h4 class="font-bold text-sm">Ambulance Hotline</h4>
+            <p class="text-lg font-black text-red-600">+91 7520356377</p>
+          </a>
+          <a href="tel:0112345678" class="p-4 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900 rounded-2xl shadow-sm text-center block hover:shadow-md transition">
+            <i class="fa-solid fa-hospital text-2xl text-clinic-600 mb-1"></i>
+            <h4 class="font-bold text-sm">Main Clinic Desk</h4>
+            <p class="text-lg font-black text-slate-800 dark:text-slate-100">+91 011 2345678</p>
+          </a>
+          <a href="tel:112" class="p-4 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900 rounded-2xl shadow-sm text-center block hover:shadow-md transition">
+            <i class="fa-solid fa-shield-cat text-2xl text-amber-600 mb-1"></i>
+            <h4 class="font-bold text-sm">Campus Security</h4>
+            <p class="text-lg font-black text-slate-800 dark:text-slate-100">Ext: 112 / 108</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN DASHBOARD -->
+    <section id="adminDashboardSection" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+          <div>
+            <h2 class="text-2xl font-bold flex items-center text-clinic-700 dark:text-clinic-500">
+              <i class="fa-solid fa-user-shield mr-2"></i> Clinic Admin & Billing Center
+            </h2>
+            <p class="text-xs text-slate-500">Manage user registrations, HOD assignments, doctor profiles, staff records, and medicine bills.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="openModal('createHodModal')" class="px-3.5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition flex items-center space-x-2">
+              <i class="fa-solid fa-user-tie"></i>
+              <span>Add Department HOD</span>
+            </button>
+            <button onclick="openModal('createDoctorModal')" class="px-3.5 py-2 bg-clinic-600 text-white rounded-xl text-xs font-bold hover:bg-clinic-700 transition flex items-center space-x-2">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Add Doctor</span>
+            </button>
+            <button onclick="openModal('createStaffModal')" class="px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center space-x-2">
+              <i class="fa-solid fa-id-card-clip"></i>
+              <span>Add Staff Member</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Pending Approvals</p>
+            <h3 id="statPendingUsers" class="text-2xl font-bold text-amber-500">0</h3>
+          </div>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Active Students</p>
+            <h3 id="statActiveStudents" class="text-2xl font-bold text-emerald-500">0</h3>
+          </div>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Total Doctors</p>
+            <h3 id="statTotalDoctors" class="text-2xl font-bold text-clinic-600">0</h3>
+          </div>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Total Staff Members</p>
+            <h3 id="statTotalStaff" class="text-2xl font-bold text-purple-600">0</h3>
+          </div>
+        </div>
+
+        <!-- STAFF DATABASE & ADMIN DATA ENTRY SECTION -->
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-base flex items-center text-purple-600 dark:text-purple-400">
+              <i class="fa-solid fa-users-line mr-2"></i> Clinic Staff Database (Admin Data Entry)
+            </h3>
+            <button onclick="openModal('createStaffModal')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition">
+              + Enter Staff Entry
+            </button>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr>
+                  <th class="p-3">Staff Photo</th>
+                  <th class="p-3">Staff Name</th>
+                  <th class="p-3">Staff ID</th>
+                  <th class="p-3">Role / Department</th>
+                  <th class="p-3">Phone</th>
+                  <th class="p-3">Shift</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminStaffTable" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Medicine Billing Management Section for Admin -->
+        <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <h3 class="font-bold text-base flex items-center text-clinic-700 dark:text-clinic-400">
+            <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Medicine Bills & Management
+          </h3>
+          <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr>
+                  <th class="p-3">Bill Ref</th>
+                  <th class="p-3">Student</th>
+                  <th class="p-3">Medicine Details</th>
+                  <th class="p-3">Amount</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminBillsTable" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <h3 class="font-bold text-base flex items-center text-amber-600">
+            <i class="fa-solid fa-user-clock mr-2"></i> Pending User & Doctor Approvals
+          </h3>
+          <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr>
+                  <th class="p-3">Photo</th>
+                  <th class="p-3">Name</th>
+                  <th class="p-3">Email</th>
+                  <th class="p-3">Role Requested</th>
+                  <th class="p-3">ID / Department</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="pendingUsersTable" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <h3 class="font-bold text-base flex items-center text-slate-700 dark:text-slate-300">
+            <i class="fa-solid fa-users mr-2"></i> All Active Clinic Users & HODs
+          </h3>
+          <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr>
+                  <th class="p-3">Photo</th>
+                  <th class="p-3">Name</th>
+                  <th class="p-3">Email</th>
+                  <th class="p-3">Role</th>
+                  <th class="p-3">Dept / ID</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-right">Manage</th>
+                </tr>
+              </thead>
+              <tbody id="allUsersTable" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOD WORKSPACE PORTAL (DEPARTMENT MEDICAL WORKSPACE) -->
+    <section id="hodDashboardSection" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-4">
+          <div>
+            <div class="flex items-center space-x-3">
+              <span class="bg-indigo-600 text-white p-2 rounded-xl text-lg"><i class="fa-solid fa-building-columns"></i></span>
+              <div>
+                <h2 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400">
+                  HOD Department Workspace
+                </h2>
+                <p class="text-xs text-slate-500 font-medium" id="hodDeptBanner">Department Medical & Prescription Monitoring Panel</p>
+              </div>
+            </div>
+          </div>
+          <span class="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 text-xs px-3 py-1 rounded-full font-bold">Real-Time Sync Active</span>
+        </div>
+
+        <!-- HOD Workspace Metrics -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Dept Appointments</p>
+            <h3 id="statHodTotalApps" class="text-2xl font-bold text-indigo-600">0</h3>
+          </div>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Doctor Approved</p>
+            <h3 id="statHodApproved" class="text-2xl font-bold text-emerald-500">0</h3>
+          </div>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Doctor Rejected</p>
+            <h3 id="statHodRejected" class="text-2xl font-bold text-red-500">0</h3>
+          </div>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border">
+            <p class="text-xs text-slate-400 font-medium">Prescriptions Synced</p>
+            <h3 id="statHodPrescriptions" class="text-2xl font-bold text-purple-600">0</h3>
+          </div>
+        </div>
+
+        <!-- Real-Time Department-Wise Confirmation Messages -->
+        <div class="space-y-4 pt-2">
+          <h3 class="font-bold text-base flex items-center text-slate-800 dark:text-slate-100">
+            <i class="fa-solid fa-bell text-indigo-600 mr-2"></i> Real-Time Department Appointment Confirmation Feed
+          </h3>
+          <p class="text-xs text-slate-500">Displays student booking notifications, Student ID, Doctor Approval confirmation, or Doctor Rejection details with reasons.</p>
+          
+          <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-indigo-50 dark:bg-slate-700 text-indigo-900 dark:text-slate-200 font-semibold">
+                <tr>
+                  <th class="p-3">Student Info</th>
+                  <th class="p-3">Doctor Assigned</th>
+                  <th class="p-3">Date & Time</th>
+                  <th class="p-3">Reason</th>
+                  <th class="p-3">Doctor Status / Confirmation</th>
+                  <th class="p-3">Doctor Remarks</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="hodAppointmentsTable" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Prescription Feed Sync to HOD Workspace -->
+        <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <h3 class="font-bold text-base flex items-center text-purple-700 dark:text-purple-400">
+            <i class="fa-solid fa-receipt mr-2"></i> Synced Department Prescription Feed
+          </h3>
+          <p class="text-xs text-slate-500">Completed doctor prescriptions for students in your department are automatically routed here.</p>
+          
+          <div id="hodPrescriptionFeedList" class="grid sm:grid-cols-2 gap-4"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR DASHBOARD -->
+    <section id="doctorDashboardSection" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-4">
+          <div>
+            <h2 class="text-2xl font-bold flex items-center text-clinic-700 dark:text-clinic-500">
+              <i class="fa-solid fa-stethoscope mr-2"></i> Doctor Workspace
+            </h2>
+            <p class="text-xs text-slate-500">Manage patient consultations, approve or reject appointments, author digital prescriptions, and sync HOD feeds.</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="md:col-span-1 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+            <h3 class="font-bold text-sm">Today's Scheduled Appointments</h3>
+            <div class="space-y-2" id="doctorAppointmentsList"></div>
+          </div>
+
+          <div class="md:col-span-2 space-y-6">
+            <!-- Form to Issue Prescription -->
+            <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-4">
+              <h3 class="font-bold text-base flex items-center text-clinic-600">
+                <i class="fa-solid fa-file-prescription mr-2"></i> Create Digital Prescription & Medicine Bill Draft
+              </h3>
+              
+              <form id="prescriptionForm" onsubmit="handleCreatePrescription(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="text-xs font-semibold">Select Registered Student</label>
+                    <select id="rxStudentSelect" required class="w-full mt-1 p-2 text-xs border rounded-lg dark:bg-slate-700 dark:border-slate-600 outline-none">
+                      <!-- Dynamically filled -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold">Diagnosis / Symptom</label>
+                    <input type="text" id="rxDiagnosis" required class="w-full mt-1 p-2 text-xs border rounded-lg dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., Acute Viral Fever"/>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                  <div class="col-span-2">
+                    <label class="text-xs font-semibold">Prescribed Medicines & Dosage</label>
+                    <textarea id="rxMedicines" rows="3" required class="w-full mt-1 p-2 text-xs border rounded-lg dark:bg-slate-700 dark:border-slate-600" placeholder="1. Paracetamol 500mg - 1 tab twice daily&#10;2. Cetirizine 10mg - 1 tab at night"></textarea>
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold">Est. Total Amount (₹)</label>
+                    <input type="number" id="rxAmount" required min="0" step="1" class="w-full mt-1 p-2 text-xs border rounded-lg dark:bg-slate-700 dark:border-slate-600" placeholder="150"/>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold">Doctor's Advice / Special Notes</label>
+                  <input type="text" id="rxInstructions" class="w-full mt-1 p-2 text-xs border rounded-lg dark:bg-slate-700 dark:border-slate-600" placeholder="Rest for 2 days, drink plenty of warm water."/>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  <span>Save, Issue Prescription & Sync to Department HOD</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Doctor View: Medicine Edit Authorizations -->
+            <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-3">
+              <h3 class="font-bold text-sm flex items-center text-amber-600">
+                <i class="fa-solid fa-user-check mr-2"></i> Medicine Detail Edit Requests
+              </h3>
+              <div id="doctorPendingEditsList" class="space-y-2"></div>
+            </div>
+
+            <!-- Doctor View: Recently Issued Prescriptions History -->
+            <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-5 space-y-3">
+              <h3 class="font-bold text-sm flex items-center text-slate-700 dark:text-slate-200">
+                <i class="fa-solid fa-clock-rotate-left text-clinic-600 mr-2"></i> Recently Issued Prescriptions
+              </h3>
+              <div id="doctorPrescriptionsHistory" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUDENT DASHBOARD -->
+    <section id="studentDashboardSection" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-4">
+          <div>
+            <h2 class="text-2xl font-bold flex items-center text-clinic-700 dark:text-clinic-500">
+              <i class="fa-solid fa-graduation-cap mr-2"></i> Student Medical Portal
+            </h2>
+            <p class="text-xs text-slate-500">Manage bookings, view doctor approval/rejection updates, download PDFs, print prescriptions, and pay bills online or in cash.</p>
+          </div>
+          <button onclick="openModal('bookAppointmentModal')" class="px-4 py-2 bg-clinic-600 text-white rounded-xl text-xs font-bold hover:bg-clinic-700 transition flex items-center space-x-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Book New Appointment</span>
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Appointments Section -->
+          <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+            <h3 class="font-bold text-sm flex items-center text-slate-700 dark:text-slate-200">
+              <i class="fa-solid fa-calendar-days text-clinic-600 mr-2"></i> My Appointments
+            </h3>
+            <div id="studentAppointmentsList" class="space-y-2"></div>
+          </div>
+
+          <!-- Prescriptions & Billing Portal -->
+          <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+            <h3 class="font-bold text-sm flex items-center text-slate-700 dark:text-slate-200">
+              <i class="fa-solid fa-file-invoice text-emerald-600 mr-2"></i> My Prescriptions & Medicine Bills
+            </h3>
+            <div id="studentBillsList" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GENERIC DASHBOARD -->
+    <section id="genericDashboardSection" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <h2 id="genericDashboardTitle" class="text-2xl font-bold text-clinic-700">Staff Dashboard</h2>
+        <p class="text-xs text-slate-500">Welcome to your workstation panel.</p>
+        <div id="genericDashboardContent" class="p-4 bg-slate-50 dark:bg-slate-700 rounded-xl text-xs space-y-2"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AI ASSISTANT -->
+  <div class="fixed bottom-6 right-6 z-40">
+    <button onclick="toggleAiAssistant()" class="p-4 bg-clinic-600 hover:bg-clinic-700 text-white rounded-full shadow-2xl flex items-center justify-center space-x-2 transition hover:scale-105">
+      <i class="fa-solid fa-robot text-xl"></i>
+      <span class="hidden sm:inline font-bold text-xs">AI Health Assistant</span>
+    </button>
+  </div>
+
+  <div id="aiAssistantDrawer" class="hidden fixed bottom-24 right-6 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden flex flex-col h-96">
+    <div class="bg-clinic-600 text-white p-3 flex justify-between items-center text-xs">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-robot text-base"></i>
+        <span class="font-bold">GEMS AI Assistant</span>
+      </div>
+      <button onclick="toggleAiAssistant()" class="text-white hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
+    </div>
+    <div class="p-2 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 text-[10px] text-amber-800 dark:text-amber-300">
+      <i class="fa-solid fa-circle-info mr-1"></i> For general info only. Not a medical diagnosis.
+    </div>
+    <div id="aiChatMessages" class="flex-1 p-3 overflow-y-auto space-y-2 text-xs">
+      <div class="bg-slate-100 dark:bg-slate-700 p-2.5 rounded-xl max-w-[85%] text-slate-700 dark:text-slate-200">
+        Hello! I can help you find campus clinic hours, understand HOD notifications, or answer basic wellness queries.
+      </div>
+    </div>
+    <div class="p-2 border-t border-slate-200 dark:border-slate-700 flex space-x-2">
+      <input type="text" id="aiInput" placeholder="Ask something..." onkeypress="if(event.key==='Enter') sendAiMessage()" class="flex-1 p-2 text-xs border rounded-xl dark:bg-slate-700 dark:border-slate-600 outline-none"/>
+      <button onclick="sendAiMessage()" class="px-3 bg-clinic-600 text-white rounded-xl text-xs font-bold hover:bg-clinic-700"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="loginModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg">Login to GEMS Clinic</h3>
+        <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="font-semibold block mb-1">Email Address</label>
+          <input type="email" id="loginEmail" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="student@gems.edu / hod.cse@gems.edu"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="loginPassword" required class="w-full p-2.5 pr-10 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="••••••••"/>
+            <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginPassIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye" id="loginPassIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex justify-between items-center text-[11px]">
+          <label class="flex items-center space-x-1 cursor-pointer">
+            <input type="checkbox" id="rememberMe" class="rounded border-slate-300"/>
+            <span class="text-slate-500">Remember Me</span>
+          </label>
+          <button type="button" onclick="handleForgotPassword()" class="text-clinic-600 font-bold hover:underline">Forgot Password?</button>
+        </div>
+        <button type="submit" class="w-full py-3 bg-clinic-600 text-white font-bold rounded-xl hover:bg-clinic-700 transition">
+          Sign In
+        </button>
+      </form>
+      <div class="pt-2 text-center text-xs text-slate-500 border-t">
+        Don't have an account? <button onclick="closeModal('loginModal'); openModal('registerModal');" class="text-clinic-600 font-bold hover:underline">Register here</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT SELF REGISTRATION MODAL -->
+  <div id="registerModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg">Student Self-Registration</h3>
+        <button onclick="closeModal('registerModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleSelfRegistration(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-semibold block mb-1">Full Name</label>
+          <input type="text" id="regName" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="e.g. Rahul Sharma"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Student Roll / ID No.</label>
+          <input type="text" id="regStudentId" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="e.g. STU-2026-88"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Department / Branch</label>
+          <select id="regDept" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600">
+            <option value="Computer Science">Computer Science & Engg</option>
+            <option value="Electrical Engg">Electrical Engg</option>
+            <option value="Mechanical Engg">Mechanical Engg</option>
+            <option value="Civil Engg">Civil Engg</option>
+            <option value="Medical & Health">Medical & Health Sciences</option>
+            <option value="Management Studies">Management Studies</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">College Email Address</label>
+          <input type="email" id="regEmail" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="student@gems.edu"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Profile Picture</label>
+          <input type="file" id="regPhoto" accept="image/*" class="w-full p-2 border rounded-xl dark:bg-slate-700 dark:border-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-clinic-100 file:text-clinic-700 hover:file:bg-clinic-200"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="regPassword" required minlength="6" class="w-full p-2.5 pr-10 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="••••••••"/>
+            <button type="button" onclick="togglePasswordVisibility('regPassword', 'regPassIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye" id="regPassIcon"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition">
+          Submit Registration Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD HOD MODAL (ADMIN ONLY) -->
+  <div id="createHodModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-indigo-700 dark:text-indigo-400"><i class="fa-solid fa-user-tie mr-2"></i>Add Department HOD</h3>
+        <button onclick="closeModal('createHodModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleCreateHod(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-semibold block mb-1">HOD Full Name</label>
+          <input type="text" id="hodName" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="Prof. A. K. Sharma"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">HOD Employee ID</label>
+          <input type="text" id="hodId" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="e.g. HOD-CSE-01"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Assigned Department / Branch</label>
+          <select id="hodDept" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600">
+            <option value="Computer Science">Computer Science & Engg</option>
+            <option value="Electrical Engg">Electrical Engg</option>
+            <option value="Mechanical Engg">Mechanical Engg</option>
+            <option value="Civil Engg">Civil Engg</option>
+            <option value="Medical & Health">Medical & Health Sciences</option>
+            <option value="Management Studies">Management Studies</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Official Email Address</label>
+          <input type="email" id="hodEmail" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="hod.cse@gems.edu"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">HOD Profile Photo</label>
+          <input type="file" id="hodPhoto" accept="image/*" class="w-full p-2 border rounded-xl dark:bg-slate-700 dark:border-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="hodPassword" required minlength="6" class="w-full p-2.5 pr-10 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="••••••••"/>
+            <button type="button" onclick="togglePasswordVisibility('hodPassword', 'hodPassIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye" id="hodPassIcon"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition">
+          Create & Activate Department HOD
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD DOCTOR MODAL -->
+  <div id="createDoctorModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg">Add New Doctor Account</h3>
+        <button onclick="closeModal('createDoctorModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleCreateDoctor(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-semibold block mb-1">Doctor Name</label>
+          <input type="text" id="docName" required class="w-full p-2 border rounded-xl dark:bg-slate-700" placeholder="Dr. Sarah Jenkins"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Doctor User ID</label>
+          <input type="text" id="docUserId" required class="w-full p-2 border rounded-xl dark:bg-slate-700" placeholder="e.g. DOC-101"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Specialization / Department</label>
+          <input type="text" id="docSpec" required class="w-full p-2 border rounded-xl dark:bg-slate-700" placeholder="General Physician / Dermatology"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Qualification</label>
+          <input type="text" id="docQual" required class="w-full p-2 border rounded-xl dark:bg-slate-700" placeholder="MBBS, MD"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Email</label>
+          <input type="email" id="docEmail" required class="w-full p-2 border rounded-xl dark:bg-slate-700" placeholder="doctor@gems.edu"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Doctor Profile Photo</label>
+          <input type="file" id="docPhoto" accept="image/*" class="w-full p-2 border rounded-xl dark:bg-slate-700 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-clinic-100 file:text-clinic-700"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="docPassword" required class="w-full p-2 pr-10 border rounded-xl dark:bg-slate-700" placeholder="••••••••"/>
+            <button type="button" onclick="togglePasswordVisibility('docPassword', 'docPassIcon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye" id="docPassIcon"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-clinic-600 text-white font-bold rounded-xl hover:bg-clinic-700">
+          Create & Activate Doctor
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD STAFF MEMBER DATA ENTRY MODAL -->
+  <div id="createStaffModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-purple-700 dark:text-purple-400"><i class="fa-solid fa-id-card-clip mr-2"></i>Enter Staff Database Record</h3>
+        <button onclick="closeModal('createStaffModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleCreateStaff(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-semibold block mb-1">Staff Member Name</label>
+          <input type="text" id="staffName" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="e.g. Ramesh Kumar"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Staff ID / Designation Code</label>
+          <input type="text" id="staffId" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="e.g. STF-808"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Department / Role</label>
+          <select id="staffRole" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600">
+            <option value="Head Nurse">Head Nurse</option>
+            <option value="Staff Nurse">Staff Nurse</option>
+            <option value="Lab Technician">Lab Technician</option>
+            <option value="Pharmacy Assistant">Pharmacy Assistant</option>
+            <option value="Front Desk Receptionist">Front Desk Receptionist</option>
+            <option value="Emergency Care Unit">Emergency Care Unit</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Contact Phone Number</label>
+          <input type="text" id="staffPhone" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600" placeholder="+91 9876543210"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Assigned Work Shift</label>
+          <select id="staffShift" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600">
+            <option value="Morning (08:00 AM - 04:00 PM)">Morning (08:00 AM - 04:00 PM)</option>
+            <option value="Evening (04:00 PM - 12:00 AM)">Evening (04:00 PM - 12:00 AM)</option>
+            <option value="Night (12:00 AM - 08:00 AM)">Night (12:00 AM - 08:00 AM)</option>
+            <option value="Rotational / Emergency Call">Rotational / Emergency Call</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Staff Photo</label>
+          <input type="file" id="staffPhoto" accept="image/*" class="w-full p-2 border rounded-xl dark:bg-slate-700 dark:border-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200"/>
+        </div>
+        <button type="submit" class="w-full py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition">
+          Save Staff Entry to Database
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- BOOK APPOINTMENT MODAL -->
+  <div id="bookAppointmentModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg">Book Clinic Appointment</h3>
+        <button onclick="closeModal('bookAppointmentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleBookAppointment(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-semibold block mb-1">Select Doctor (By Name & Doctor User ID)</label>
+          <select id="appDoctorSelect" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600"></select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Preferred Date</label>
+          <input type="date" id="appDate" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600"/>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Time Slot</label>
+          <select id="appTime" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600">
+            <option value="09:00 AM">09:00 AM - 10:00 AM</option>
+            <option value="11:00 AM">11:00 AM - 12:00 PM</option>
+            <option value="02:00 PM">02:00 PM - 03:00 PM</option>
+            <option value="04:00 PM">04:00 PM - 05:00 PM</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Reason for Visit</label>
+          <input type="text" id="appReason" required placeholder="e.g. Fever, Routine checkup" class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600"/>
+        </div>
+        <button type="submit" class="w-full py-3 bg-clinic-600 text-white font-bold rounded-xl hover:bg-clinic-700">
+          Send Appointment Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MEDICINE DETAILS EDIT MODAL -->
+  <div id="editBillModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-clinic-700 dark:text-clinic-500">Edit Medicine Details</h3>
+        <button onclick="closeModal('editBillModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleSaveEditBill(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="editBillId"/>
+        <div>
+          <label class="font-semibold block mb-1">Updated Medicine Details & Dosages</label>
+          <textarea id="editMedicinesText" rows="3" required class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600"></textarea>
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Updated Bill Amount (₹)</label>
+          <input type="number" id="editBillAmount" required min="0" class="w-full p-2.5 border rounded-xl dark:bg-slate-700 dark:border-slate-600"/>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition">
+          Submit Edited Medicine Details
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL FOR STUDENT -->
+  <div id="paymentModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-emerald-600">Complete Medicine Bill Payment</h3>
+        <button onclick="closeModal('paymentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleCompletePayment(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="payBillId"/>
+        <div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-xl text-center">
+          <span class="text-slate-400 font-medium">Total Bill Amount</span>
+          <div class="text-3xl font-extrabold text-clinic-600 my-1" id="payAmountDisplay">₹0</div>
+          <p class="text-[11px] text-slate-500" id="payRefDisplay">Ref: -</p>
+        </div>
+
+        <div>
+          <label class="font-semibold block mb-2">Select Payment Method</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="p-3 border rounded-xl flex items-center space-x-2 cursor-pointer hover:border-clinic-600">
+              <input type="radio" name="payMethod" value="Online" checked onclick="togglePaymentMethod('Online')"/>
+              <span class="font-bold"><i class="fa-solid fa-credit-card text-clinic-600 mr-1"></i> Online Payment</span>
+            </label>
+            <label class="p-3 border rounded-xl flex items-center space-x-2 cursor-pointer hover:border-clinic-600">
+              <input type="radio" name="payMethod" value="Cash" onclick="togglePaymentMethod('Cash')"/>
+              <span class="font-bold"><i class="fa-solid fa-money-bill-wave text-emerald-600 mr-1"></i> Cash at Desk</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="onlinePayFields" class="space-y-2">
+          <label class="font-semibold block mb-1">UPI ID or Card Details</label>
+          <input type="text" id="paymentDetails" class="w-full p-2.5 border rounded-xl dark:bg-slate-700" placeholder="student@upi / 4111 •••• •••• 1111"/>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition">
+          Confirm Payment & Generate Final Permanent Bill
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="checkInModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center space-y-4">
+      <h3 class="font-bold text-lg">Scan & Check-In</h3>
+      <div class="p-6 bg-slate-100 dark:bg-slate-700 rounded-2xl flex flex-col items-center justify-center space-y-3">
+        <i class="fa-solid fa-qrcode text-8xl text-clinic-600"></i>
+        <p class="text-xs text-slate-500">Scan at Clinic Desk to get your OPD token instantly.</p>
+      </div>
+      <button onclick="simulateCheckIn()" class="w-full py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700">
+        Simulate Scanning Code
+      </button>
+      <button onclick="closeModal('checkInModal')" class="w-full py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="mt-20 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs text-slate-500 dark:text-slate-400">
+      <div class="space-y-3">
+        <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+          <i class="fa-solid fa-hospital-user text-clinic-600"></i>
+          <span>GEMS Telemedicine Clinic</span>
+        </h4>
+        <p>Providing safe, confidential, and quick medical assistance for college students & faculty members.</p>
+        <p class="text-slate-600 dark:text-slate-300 font-semibold mt-2">
+          Website Developer: <span class="text-clinic-600 dark:text-clinic-400 font-bold">AWANISH CHAUBEY</span>
+        </p>
+      </div>
+      <div>
+        <h5 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Quick Nav</h5>
+        <ul class="space-y-1">
+          <li><button onclick="showSection('home')" class="hover:underline">Home</button></li>
+          <li><button onclick="showSection('services')" class="hover:underline">Medical Services</button></li>
+          <li><button onclick="showSection('doctors')" class="hover:underline">Doctors</button></li>
+          <li><button onclick="showSection('camps')" class="hover:underline">Health Camps</button></li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Clinic Timings</h5>
+        <p>Monday - Saturday: 8:00 AM - 8:00 PM</p>
+        <p>Sunday: Emergency Services Only</p>
+        <p class="mt-2 text-red-500 font-bold">24/7 Ambulance: +91 7520356377</p>
+      </div>
+      <div>
+        <h5 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Security & Privacy</h5>
+        <p>Role-Based Access Control (RBAC) enforced. Patient health records are confidential.</p>
+        <p class="mt-4 text-[10px]">© 2026 GEMS Telemedicine Clinic. Developed by AWANISH CHAUBEY. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    const initialServices = [
+      { id: 's1', title: 'General Consultation', icon: 'fa-user-doctor', desc: 'Comprehensive medical assessment for common illnesses and checkups.' },
+      { id: 's2', title: 'First Aid & Minor Injuries', icon: 'fa-kit-medical', desc: 'Immediate wound dressing, sprain management, and minor injury care.' },
+      { id: 's3', title: 'Fever & Cold Care', icon: 'fa-thermometer', desc: 'Rapid viral screening, temperature management, and prescription advice.' },
+      { id: 's4', title: 'Mental Wellness Support', icon: 'fa-brain', desc: 'Confidential counseling sessions and stress management guidance.' },
+      { id: 's5', title: 'Women\'s Health', icon: 'fa-venus', desc: 'Specialized healthcare, gynecological advice, and wellness support.' },
+      { id: 's6', title: 'Vaccination Drive', icon: 'fa-syringe', desc: 'Routine immunizations and seasonal flu vaccine administration.' }
+    ];
+
+    const initialMedicines = [
+      { name: 'Paracetamol 500mg', category: 'Analgesic / Antipyretic', usage: 'Fever and mild to moderate body pain.', warning: 'Do not exceed 4000mg per day.' },
+      { name: 'Cetirizine 10mg', category: 'Antihistamine', usage: 'Allergies, runny nose, and sneezing.', warning: 'May cause mild drowsiness.' },
+      { name: 'Amoxicillin 500mg', category: 'Antibiotic', usage: 'Bacterial infections as prescribed by doctor.', warning: 'Complete the full course. Rx required.' },
+      { name: 'ORS Packets', category: 'Electrolytes', usage: 'Dehydration and weakness restoration.', warning: 'Mix with clean drinking water.' }
+    ];
+
+    const initialCamps = [
+      { title: 'Free Eye & Vision Screening Drive', date: '2026-10-05', time: '09:00 AM - 04:00 PM', location: 'Main Campus Hall', slots: 45 },
+      { title: 'Annual Blood Donation Camp', date: '2026-10-12', time: '10:00 AM - 05:00 PM', location: 'Clinic Lawn', slots: 100 }
+    ];
+
+    let users = JSON.parse(localStorage.getItem('gems_users')) || [
+      { id: 'u1', name: 'Super Administrator', email: 'admin@gems.edu', pass: 'admin123', role: 'Super Admin', status: 'Approved', profilePic: '' },
+      { id: 'u2', name: 'Dr. Robert Carter', docUserId: 'DOC-101', email: 'robert@gems.edu', pass: 'doc123', role: 'Doctor', spec: 'General Physician', status: 'Approved', profilePic: '' },
+      { id: 'u3', name: 'Dr. Emily Watson', docUserId: 'DOC-102', email: 'emily@gems.edu', pass: 'doc123', role: 'Doctor', spec: 'Dermatology & Wellness', status: 'Approved', profilePic: '' },
+      { id: 'u4', name: 'Ananya Roy', email: 'student@gems.edu', pass: 'student123', role: 'Student', studentId: 'STU-990', dept: 'Computer Science', status: 'Approved', profilePic: '' },
+      { id: 'u5', name: 'Prof. A. K. Sharma', hodId: 'HOD-CSE-01', email: 'hod.cse@gems.edu', pass: 'hod123', role: 'HOD', dept: 'Computer Science', status: 'Approved', profilePic: '' }
+    ];
+
+    let staffList = JSON.parse(localStorage.getItem('gems_staff')) || [
+      { id: 'STF-801', name: 'Ramesh Kumar', role: 'Head Nurse', phone: '+91 9876543210', shift: 'Morning (08:00 AM - 04:00 PM)', status: 'Active', profilePic: '' },
+      { id: 'STF-802', name: 'Priya Sharma', role: 'Lab Technician', phone: '+91 9812345678', shift: 'Evening (04:00 PM - 12:00 AM)', status: 'Active', profilePic: '' }
+    ];
+
+    let currentUser = JSON.parse(localStorage.getItem('gems_current_user')) || null;
+    
+    let appointments = JSON.parse(localStorage.getItem('gems_appointments')) || [
+      { id: 'app-1', studentName: 'Ananya Roy', studentEmail: 'student@gems.edu', studentId: 'STU-990', studentDept: 'Computer Science', doctorName: 'Dr. Robert Carter', docUserId: 'DOC-101', date: '2026-09-28', time: '10:00 AM', reason: 'Fever & Headaches', status: 'Approved by Doctor', doctorRemark: 'Confirmed for 10 AM slot.' }
+    ];
+
+    let prescriptions = JSON.parse(localStorage.getItem('gems_prescriptions')) || [
+      { id: 'rx-1', studentName: 'Ananya Roy', studentEmail: 'student@gems.edu', studentId: 'STU-990', studentDept: 'Computer Science', doctorName: 'Dr. Robert Carter', diagnosis: 'Acute Viral Fever', medicines: 'Paracetamol 500mg (1-0-1), ORS Drink', instructions: 'Drink fluids, rest 2 days.', date: '2026-09-26' }
+    ];
+
+    let bills = JSON.parse(localStorage.getItem('gems_bills')) || [
+      {
+        id: 'BILL-1001',
+        studentName: 'Ananya Roy',
+        studentEmail: 'student@gems.edu',
+        doctorName: 'Dr. Robert Carter',
+        medicines: 'Paracetamol 500mg (10 tabs) - ₹50\nORS Drink (2 packets) - ₹30',
+        amount: 80,
+        doctorApproved: true,
+        adminGenerated: true,
+        paymentStatus: 'Pending Payment',
+        paymentMethod: '',
+        date: '2026-09-26'
+      }
+    ];
+
+    function saveData() {
+      localStorage.setItem('gems_users', JSON.stringify(users));
+      localStorage.setItem('gems_staff', JSON.stringify(staffList));
+      localStorage.setItem('gems_current_user', JSON.stringify(currentUser));
+      localStorage.setItem('gems_appointments', JSON.stringify(appointments));
+      localStorage.setItem('gems_prescriptions', JSON.stringify(prescriptions));
+      localStorage.setItem('gems_bills', JSON.stringify(bills));
+    }
+
+    function readFileAsBase64(fileInput) {
+      return new Promise((resolve) => {
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+          resolve('');
+          return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) { resolve(e.target.result); };
+        reader.onerror = function() { resolve(''); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function getAvatarHtml(picUrl, name, sizeClass = "w-8 h-8") {
+      if (picUrl && picUrl.trim() !== '') {
+        return `<img src="${picUrl}" alt="${name}" class="${sizeClass} rounded-full object-cover border border-clinic-500 shadow-sm" />`;
+      }
+      const initial = name ? name.charAt(0).toUpperCase() : 'U';
+      return `<div class="${sizeClass} rounded-full bg-clinic-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">${initial}</div>`;
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const darkIcon = document.getElementById('darkIcon');
+      if (document.documentElement.classList.contains('dark')) {
+        darkIcon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        darkIcon.classList.replace('fa-sun', 'fa-moon');
+      }
+    }
+
+    function openModal(modalId) {
+      const el = document.getElementById(modalId);
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      const el = document.getElementById(modalId);
+      if (el) el.classList.add('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      let bgColor = 'bg-slate-800 text-white';
+      if (type === 'success') bgColor = 'bg-emerald-600 text-white';
+      if (type === 'error') bgColor = 'bg-red-600 text-white';
+
+      toast.className = `${bgColor} text-xs px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 transition-all transform duration-300`;
+      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3500);
+    }
+
+    window.onload = function() {
+      renderServices();
+      renderDoctors();
+      renderMedicines();
+      renderCamps();
+      updateAuthUI();
+      populateDoctorDropdown();
+    };
+
+    function renderServices() {
+      const grid = document.getElementById('servicesGrid');
+      grid.innerHTML = initialServices.map(s => `
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition space-y-3">
+          <div class="w-12 h-12 bg-clinic-50 dark:bg-slate-700 text-clinic-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid ${s.icon}"></i>
+          </div>
+          <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">${s.title}</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">${s.desc}</p>
+          <button onclick="handleQuickBook()" class="text-xs font-bold text-clinic-600 hover:underline flex items-center space-x-1 pt-2">
+            <span>Book Consultation</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderDoctors() {
+      const grid = document.getElementById('doctorsGrid');
+      const approvedDoctors = users.filter(u => u.role === 'Doctor' && u.status === 'Approved');
+      
+      grid.innerHTML = approvedDoctors.map(d => `
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+          <div class="flex items-center space-x-4">
+            ${d.profilePic ? 
+              `<img src="${d.profilePic}" alt="${d.name}" class="w-14 h-14 rounded-2xl object-cover border-2 border-clinic-600 shadow-md" />` : 
+              `<div class="w-14 h-14 bg-clinic-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center text-clinic-600 font-bold text-xl">
+                <i class="fa-solid fa-user-doctor"></i>
+              </div>`
+            }
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${d.name}</h4>
+              <p class="text-xs text-clinic-600 font-medium">${d.spec || 'General Physician'}</p>
+              <p class="text-[10px] text-slate-400 font-mono">User ID: ${d.docUserId || 'DOC-GEN'}</p>
+              <span class="inline-block mt-1 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full">Available Today</span>
+            </div>
+          </div>
+          <button onclick="handleQuickBook('${d.name}', '${d.docUserId || 'DOC-101'}')" class="w-full py-2 bg-clinic-600 text-white rounded-xl text-xs font-bold hover:bg-clinic-700 transition">
+            Book Appointment
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderMedicines() {
+      const grid = document.getElementById('medicinesGrid');
+      grid.innerHTML = initialMedicines.map(m => `
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+          <div class="flex justify-between items-start">
+            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${m.name}</h4>
+            <span class="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded font-semibold text-slate-600 dark:text-slate-300">${m.category}</span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-300"><strong>Usage:</strong> ${m.usage}</p>
+          <p class="text-[11px] text-amber-600 dark:text-amber-400"><strong>Warning:</strong> ${m.warning}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderCamps() {
+      const grid = document.getElementById('campsGrid');
+      grid.innerHTML = initialCamps.map(c => `
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+          <span class="text-[10px] font-bold bg-clinic-600 text-white px-2 py-0.5 rounded uppercase">Upcoming Camp</span>
+          <h3 class="font-bold text-base">${c.title}</h3>
+          <div class="text-xs text-slate-500 space-y-1">
+            <p><i class="fa-solid fa-calendar mr-2 text-clinic-600"></i>${c.date} | ${c.time}</p>
+            <p><i class="fa-solid fa-location-dot mr-2 text-red-500"></i>${c.location}</p>
+            <p><i class="fa-solid fa-users mr-2 text-emerald-600"></i>Available Slots: <strong>${c.slots}</strong></p>
+          </div>
+          <button onclick="registerForCamp('${c.title}')" class="w-full py-2 bg-slate-800 dark:bg-slate-700 text-white text-xs font-bold rounded-xl hover:bg-slate-900 transition">
+            Reserve Free Slot
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function populateDoctorDropdown() {
+      const select = document.getElementById('appDoctorSelect');
+      if (!select) return;
+      const approvedDoctors = users.filter(u => u.role === 'Doctor' && u.status === 'Approved');
+      select.innerHTML = approvedDoctors.map(d => `<option value="${d.docUserId || 'DOC-GEN'}" data-docname="${d.name}">${d.name} (User ID: ${d.docUserId || 'DOC-GEN'}) - ${d.spec || 'General'}</option>`).join('');
+      
+      const rxSelect = document.getElementById('rxStudentSelect');
+      if (rxSelect) {
+        const approvedStudents = users.filter(u => u.role === 'Student' && u.status === 'Approved');
+        rxSelect.innerHTML = approvedStudents.map(s => `<option value="${s.email}">${s.name} (${s.studentId || 'STU-ID'}) - ${s.dept || 'General Dept'}</option>`).join('');
+      }
+    }
+
+    function showSection(sectionId) {
+      const sections = ['homeSection', 'servicesSection', 'doctorsSection', 'adminStudentsSection', 'medicinesSection', 'campsSection', 'emergencySection', 'adminDashboardSection', 'hodDashboardSection', 'doctorDashboardSection', 'studentDashboardSection', 'genericDashboardSection'];
+      sections.forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.add('hidden');
+      });
+
+      const activeEl = document.getElementById(sectionId + 'Section');
+      if (activeEl) {
+        activeEl.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      if (sectionId === 'adminDashboard') renderAdminDashboard();
+      if (sectionId === 'adminStudents') renderAdminStudentsSection();
+      if (sectionId === 'hodDashboard') renderHodDashboard();
+      if (sectionId === 'doctorDashboard') renderDoctorDashboard();
+      if (sectionId === 'studentDashboard') renderStudentDashboard();
+    }
+
+    function navigateToCurrentDashboard() {
+      if (!currentUser) return;
+      if (currentUser.role === 'Super Admin') showSection('adminDashboard');
+      else if (currentUser.role === 'HOD') showSection('hodDashboard');
+      else if (currentUser.role === 'Doctor') showSection('doctorDashboard');
+      else if (currentUser.role === 'Student') showSection('studentDashboard');
+      else {
+        showSection('genericDashboard');
+        document.getElementById('genericDashboardTitle').innerText = `${currentUser.role} Workspace`;
+        document.getElementById('genericDashboardContent').innerHTML = `<p>Welcome, <strong>${currentUser.name}</strong> (${currentUser.email}). You are logged in with role: <strong>${currentUser.role}</strong>.</p>`;
+      }
+    }
+
+    function updateAuthUI() {
+      const loggedOut = document.getElementById('loggedOutButtons');
+      const loggedIn = document.getElementById('loggedInUser');
+      const adminBtn = document.getElementById('adminStudentsNavBtn');
+
+      if (currentUser) {
+        loggedOut.classList.add('hidden');
+        loggedIn.classList.remove('hidden');
+        document.getElementById('userNameDisplay').innerText = currentUser.name;
+        document.getElementById('userRoleBadge').innerText = currentUser.role;
+        document.getElementById('userAvatarContainer').innerHTML = getAvatarHtml(currentUser.profilePic, currentUser.name, "w-6 h-6");
+
+        if (currentUser.role === 'Super Admin') {
+          adminBtn.classList.remove('hidden');
+        } else {
+          adminBtn.classList.add('hidden');
+        }
+      } else {
+        loggedOut.classList.remove('hidden');
+        loggedIn.classList.add('hidden');
+        adminBtn.classList.add('hidden');
+      }
+    }
+
+    // AUTHENTICATION LOGIC
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+
+      const user = users.find(u => u.email === email && u.pass === pass);
+      if (!user) {
+        showToast('Invalid email or password combination.', 'error');
+        return;
+      }
+
+      if (user.status !== 'Approved') {
+        showToast('Your account is pending Administrator approval.', 'error');
+        return;
+      }
+
+      currentUser = user;
+      saveData();
+      updateAuthUI();
+      closeModal('loginModal');
+      showToast(`Welcome back, ${currentUser.name}!`, 'success');
+      navigateToCurrentDashboard();
+    }
+
+    async function handleSelfRegistration(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const studentId = document.getElementById('regStudentId').value;
+      const dept = document.getElementById('regDept').value;
+      const email = document.getElementById('regEmail').value;
+      const pass = document.getElementById('regPassword').value;
+      const photoInput = document.getElementById('regPhoto');
+      
+      const profilePic = await readFileAsBase64(photoInput);
+
+      if (users.find(u => u.email === email)) {
+        showToast('An account with this email already exists.', 'error');
+        return;
+      }
+
+      const newUser = {
+        id: 'u-' + Date.now(),
+        name,
+        studentId,
+        dept,
+        email,
+        pass,
+        role: 'Student',
+        status: 'Pending',
+        profilePic
+      };
+
+      users.push(newUser);
+      saveData();
+      closeModal('registerModal');
+      document.getElementById('registerModal').querySelector('form').reset();
+      showToast('Registration submitted with profile picture! Please wait for Admin approval before logging in.', 'info');
+    }
+
+    // ADMIN: CREATE HOD
+    async function handleCreateHod(e) {
+      e.preventDefault();
+      const name = document.getElementById('hodName').value;
+      const hodId = document.getElementById('hodId').value;
+      const dept = document.getElementById('hodDept').value;
+      const email = document.getElementById('hodEmail').value;
+      const pass = document.getElementById('hodPassword').value;
+      const photoInput = document.getElementById('hodPhoto');
+
+      const profilePic = await readFileAsBase64(photoInput);
+
+      if (users.find(u => u.email === email)) {
+        showToast('An account with this email already exists.', 'error');
+        return;
+      }
+
+      const newHod = {
+        id: 'hod-' + Date.now(),
+        name,
+        hodId,
+        dept,
+        email,
+        pass,
+        role: 'HOD',
+        status: 'Approved',
+        profilePic
+      };
+
+      users.push(newHod);
+      saveData();
+      closeModal('createHodModal');
+      document.getElementById('createHodModal').querySelector('form').reset();
+      renderAdminDashboard();
+      showToast(`HOD ${name} created for ${dept} Department!`, 'success');
+    }
+
+    async function handleCreateDoctor(e) {
+      e.preventDefault();
+      const name = document.getElementById('docName').value;
+      const docUserId = document.getElementById('docUserId').value;
+      const spec = document.getElementById('docSpec').value;
+      const qual = document.getElementById('docQual').value;
+      const email = document.getElementById('docEmail').value;
+      const pass = document.getElementById('docPassword').value;
+      const photoInput = document.getElementById('docPhoto');
+
+      const profilePic = await readFileAsBase64(photoInput);
+
+      const newDoc = {
+        id: 'doc-' + Date.now(),
+        name,
+        docUserId,
+        spec,
+        qual,
+        email,
+        pass,
+        role: 'Doctor',
+        status: 'Approved',
+        profilePic
+      };
+
+      users.push(newDoc);
+      saveData();
+      closeModal('createDoctorModal');
+      document.getElementById('createDoctorModal').querySelector('form').reset();
+      renderAdminDashboard();
+      renderDoctors();
+      populateDoctorDropdown();
+      showToast(`Doctor ${name} (${docUserId}) created successfully!`, 'success');
+    }
+
+    async function handleCreateStaff(e) {
+      e.preventDefault();
+      const name = document.getElementById('staffName').value;
+      const staffId = document.getElementById('staffId').value;
+      const role = document.getElementById('staffRole').value;
+      const phone = document.getElementById('staffPhone').value;
+      const shift = document.getElementById('staffShift').value;
+      const photoInput = document.getElementById('staffPhoto');
+
+      const profilePic = await readFileAsBase64(photoInput);
+
+      const newStaff = {
+        id: staffId || 'STF-' + Date.now(),
+        name,
+        role,
+        phone,
+        shift,
+        status: 'Active',
+        profilePic
+      };
+
+      staffList.push(newStaff);
+      saveData();
+      closeModal('createStaffModal');
+      document.getElementById('createStaffModal').querySelector('form').reset();
+      renderAdminDashboard();
+      showToast(`Staff entry for ${name} (${staffId}) saved to database!`, 'success');
+    }
+
+    function deleteStaff(staffId) {
+      if (confirm('Are you sure you want to delete this staff record?')) {
+        staffList = staffList.filter(s => s.id !== staffId);
+        saveData();
+        renderAdminDashboard();
+        showToast('Staff record removed from database.', 'info');
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      saveData();
+      updateAuthUI();
+      showSection('home');
+      showToast('Successfully logged out.', 'info');
+    }
+
+    function handleQuickBook(docName = '', docUserId = '') {
+      if (!currentUser) {
+        showToast('Please login or register to book an appointment.', 'info');
+        openModal('loginModal');
+        return;
+      }
+      populateDoctorDropdown();
+      if (docUserId) {
+        const select = document.getElementById('appDoctorSelect');
+        if (select) select.value = docUserId;
+      }
+      openModal('bookAppointmentModal');
+    }
+
+    function handleBookAppointment(e) {
+      e.preventDefault();
+      const select = document.getElementById('appDoctorSelect');
+      const selectedOption = select.options[select.selectedIndex];
+      const docUserId = select.value;
+      const doctorName = selectedOption.getAttribute('data-docname') || 'Doctor';
+
+      const date = document.getElementById('appDate').value;
+      const time = document.getElementById('appTime').value;
+      const reason = document.getElementById('appReason').value;
+
+      const newApp = {
+        id: 'app-' + Date.now(),
+        studentName: currentUser.name,
+        studentEmail: currentUser.email,
+        studentId: currentUser.studentId || 'STU-GEN',
+        studentDept: currentUser.dept || 'Computer Science',
+        doctorName,
+        docUserId,
+        date,
+        time,
+        reason,
+        status: 'Pending Doctor Approval',
+        doctorRemark: 'Awaiting Doctor Response'
+      };
+
+      appointments.push(newApp);
+      saveData();
+      closeModal('bookAppointmentModal');
+      document.getElementById('bookAppointmentModal').querySelector('form').reset();
+      if (currentUser.role === 'Student') renderStudentDashboard();
+      showToast(`Appointment sent! Sent to Doctor (${docUserId}) & routed to ${newApp.studentDept} HOD Workspace.`, 'success');
+    }
+
+    // DOCTOR APPROVE / REJECT APPOINTMENT WORKFLOW
+    function doctorApproveAppointment(appId) {
+      const app = appointments.find(a => a.id === appId);
+      if (app) {
+        app.status = 'Approved by Doctor';
+        app.doctorRemark = 'Appointment Confirmed & Scheduled.';
+        saveData();
+        renderDoctorDashboard();
+        showToast(`Appointment for ${app.studentName} Approved! HOD Portal Updated.`, 'success');
+      }
+    }
+
+    function doctorRejectAppointment(appId) {
+      const reason = prompt('Please enter rejection remark / note for Student & HOD:', 'Doctor unavailable at selected time slot.');
+      if (reason !== null) {
+        const app = appointments.find(a => a.id === appId);
+        if (app) {
+          app.status = 'Rejected by Doctor';
+          app.doctorRemark = reason || 'Rejected by Doctor';
+          saveData();
+          renderDoctorDashboard();
+          showToast(`Appointment for ${app.studentName} Rejected. Rejection Notification sent to ${app.studentDept} HOD Workspace.`, 'info');
+        }
+      }
+    }
+
+    function deleteAppointment(appId) {
+      if (confirm('Are you sure you want to remove/delete this appointment?')) {
+        appointments = appointments.filter(a => a.id !== appId);
+        saveData();
+        if (currentUser) {
+          if (currentUser.role === 'HOD') renderHodDashboard();
+          if (currentUser.role === 'Doctor') renderDoctorDashboard();
+          if (currentUser.role === 'Student') renderStudentDashboard();
+        }
+        showToast('Appointment deleted successfully.', 'info');
+      }
+    }
+
+    function deletePrescription(rxId) {
+      if (confirm('Are you sure you want to delete this prescription record?')) {
+        prescriptions = prescriptions.filter(p => p.id !== rxId);
+        saveData();
+        if (currentUser) {
+          if (currentUser.role === 'HOD') renderHodDashboard();
+          if (currentUser.role === 'Doctor') renderDoctorDashboard();
+          if (currentUser.role === 'Student') renderStudentDashboard();
+        }
+        showToast('Prescription record deleted.', 'info');
+      }
+    }
+
+    function deleteBill(billId) {
+      if (confirm('Are you sure you want to delete this bill record?')) {
+        bills = bills.filter(b => b.id !== billId);
+        saveData();
+        if (currentUser && currentUser.role === 'Super Admin') renderAdminDashboard();
+        if (currentUser && currentUser.role === 'Student') renderStudentDashboard();
+        showToast('Bill record deleted.', 'info');
+      }
+    }
+
+    function deleteUser(userId) {
+      if (confirm('Are you sure you want to delete this user profile?')) {
+        users = users.filter(u => u.id !== userId);
+        saveData();
+        if (currentUser && currentUser.role === 'Super Admin') {
+          renderAdminDashboard();
+          renderAdminStudentsSection();
+        }
+        showToast('User profile deleted.', 'info');
+      }
+    }
+
+    // DOWNLOAD PRESCRIPTION PDF WITH CLINIC NAME AND DETAILS
+    function downloadPrescriptionPDF(rxId) {
+      const p = prescriptions.find(item => item.id === rxId);
+      if (!p) {
+        showToast('Prescription record not found.', 'error');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Top Header Banner
+      doc.setFillColor(2, 132, 199);
+      doc.rect(0, 0, 210, 32, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('GEMS Telemedicine Clinic', 15, 16);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Official Student Healthcare Center | College Medical Services', 15, 23);
+      doc.text('Emergency: +91 7520356377 | Hours: 8:00 AM - 8:00 PM (Mon-Sat)', 15, 28);
+
+      // Section Title
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(15);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DIGITAL PRESCRIPTION CARD', 15, 45);
+
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(2, 132, 199);
+      doc.line(15, 48, 195, 48);
+
+      // Patient Details Box
+      doc.setFillColor(240, 249, 255);
+      doc.rect(15, 52, 180, 42, 'F');
+      doc.setDrawColor(224, 242, 254);
+      doc.rect(15, 52, 180, 42, 'S');
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(3, 105, 161);
+      doc.text('STUDENT & PRESCRIPTION DETAILS', 20, 60);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 41, 59);
+      doc.text(`Student Name: ${p.studentName}`, 20, 68);
+      doc.text(`Student Roll ID: ${p.studentId || 'N/A'}`, 20, 75);
+      doc.text(`Department: ${p.studentDept || 'N/A'}`, 20, 82);
+      doc.text(`Student Email: ${p.studentEmail || 'N/A'}`, 20, 89);
+
+      doc.text(`Prescription Ref: ${p.id}`, 115, 68);
+      doc.text(`Date Issued: ${p.date}`, 115, 75);
+      doc.text(`Attending Doctor: ${p.doctorName}`, 115, 82);
+
+      // Diagnosis
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 41, 59);
+      doc.text('Diagnosis / Symptoms:', 15, 104);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(51, 65, 85);
+      doc.text(p.diagnosis || 'N/A', 15, 111);
+
+      // Prescribed Medicines
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 41, 59);
+      doc.text('Prescribed Medicines & Dosage:', 15, 125);
+
+      doc.setFillColor(248, 250, 252);
+      doc.rect(15, 129, 180, 45, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(15, 129, 180, 45, 'S');
+
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(15, 23, 42);
+      const medLines = doc.splitTextToSize(p.medicines || 'No medicines listed.', 170);
+      doc.text(medLines, 20, 137);
+
+      // Advice
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(30, 41, 59);
+      doc.text("Doctor's Advice & Instructions:", 15, 184);
+
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(71, 85, 105);
+      const instLines = doc.splitTextToSize(p.instructions || 'Follow standard health guidelines.', 180);
+      doc.text(instLines, 15, 191);
+
+      // Footer Signatures
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(203, 213, 225);
+      doc.line(15, 245, 195, 245);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(2, 132, 199);
+      doc.text(`${p.doctorName}`, 135, 255);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Authorized Medical Officer', 135, 260);
+      doc.text('GEMS Telemedicine Clinic', 135, 264);
+
+      doc.text('Official Digitally Verified Prescription Document.', 15, 272);
+      doc.text('Website Developer: AWANISH CHAUBEY | GEMS Telemedicine Clinic', 15, 277);
+
+      doc.save(`Prescription_${p.studentId || 'Ref'}_${p.id}.pdf`);
+      showToast('Prescription PDF generated & downloaded!', 'success');
+    }
+
+    // PRINT PRESCRIPTION CARD WITH WEBSITE LOGO AND CLINIC NAME
+    function printPrescriptionCard(rxId) {
+      const p = prescriptions.find(item => item.id === rxId);
+      if (!p) {
+        showToast('Prescription record not found.', 'error');
+        return;
+      }
+
+      const printWindow = window.open('', '_blank', 'width=800,height=900');
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Prescription - ${p.studentName}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; color: #1e293b; background: #fff; }
+            .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0284c7; padding-bottom: 15px; margin-bottom: 20px; }
+            .logo-container { display: flex; align-items: center; gap: 15px; }
+            .logo-img { width: 65px; height: 65px; object-fit: cover; border-radius: 12px; border: 2px solid #0284c7; }
+            .clinic-info h1 { margin: 0; color: #0284c7; font-size: 24px; font-weight: 800; }
+            .clinic-info p { margin: 2px 0 0 0; color: #64748b; font-size: 12px; font-weight: 600; }
+            .card-title { text-align: center; font-size: 18px; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f0f9ff; padding: 15px; border-radius: 10px; border: 1px solid #e0f2fe; margin-bottom: 20px; font-size: 13px; }
+            .info-item { margin-bottom: 6px; }
+            .info-item strong { color: #0369a1; }
+            .section-title { font-size: 14px; font-weight: bold; color: #0f172a; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+            .med-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; font-size: 13px; white-space: pre-wrap; margin-bottom: 20px; }
+            .advice-box { font-style: italic; color: #334155; font-size: 13px; margin-bottom: 30px; padding: 12px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px; }
+            .footer { margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #cbd5e1; padding-top: 15px; font-size: 11px; color: #64748b; }
+            .doc-sig { text-align: right; }
+            .doc-sig strong { font-size: 14px; color: #0284c7; display: block; }
+            @media print {
+              body { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo-container">
+              <img src="WhatsApp Image 2026-09-27 at 8.53.55 AM.jpeg" class="logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2966/2966327.png';"/>
+              <div class="clinic-info">
+                <h1>GEMS Telemedicine Clinic</h1>
+                <p>Official Student Healthcare Center | College Medical Services</p>
+                <p>Emergency Contact: +91 7520356377 | Hours: 8:00 AM - 8:00 PM</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-title">Digital Prescription Card</div>
+
+          <div class="info-grid">
+            <div>
+              <div class="info-item"><strong>Student Name:</strong> ${p.studentName}</div>
+              <div class="info-item"><strong>Student Roll ID:</strong> ${p.studentId || 'N/A'}</div>
+              <div class="info-item"><strong>Department:</strong> ${p.studentDept || 'N/A'}</div>
+              <div class="info-item"><strong>Email:</strong> ${p.studentEmail || 'N/A'}</div>
+            </div>
+            <div>
+              <div class="info-item"><strong>Prescription Ref:</strong> ${p.id}</div>
+              <div class="info-item"><strong>Date Issued:</strong> ${p.date}</div>
+              <div class="info-item"><strong>Attending Doctor:</strong> ${p.doctorName}</div>
+            </div>
+          </div>
+
+          <div class="section-title">Diagnosis / Symptoms</div>
+          <p style="font-size: 13px; color: #334155;">${p.diagnosis || 'N/A'}</p>
+
+          <div class="section-title">Prescribed Medicines & Dosage</div>
+          <div class="med-box">${p.medicines || 'No medicines listed.'}</div>
+
+          <div class="section-title">Doctor's Advice / Special Instructions</div>
+          <div class="advice-box">${p.instructions || 'Follow standard health guidelines and drink plenty of fluids.'}</div>
+
+          <div class="footer">
+            <div>
+              <p>Official Prescription Card - GEMS Telemedicine Clinic</p>
+              <p>Website Developer: AWANISH CHAUBEY</p>
+            </div>
+            <div class="doc-sig">
+              <strong>${p.doctorName}</strong>
+              <span>Authorized Medical Officer</span><br/>
+              <span>GEMS Telemedicine Clinic</span>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          <\/script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+    }
+
+    // RENDER HOD DASHBOARD
+    function renderHodDashboard() {
+      const dept = currentUser.dept || 'Computer Science';
+      document.getElementById('hodDeptBanner').innerText = `Department of ${dept} - Live Medical Workspace & Prescription Sync Feed`;
+
+      const deptApps = appointments.filter(a => a.studentDept === dept);
+      const approvedApps = deptApps.filter(a => a.status === 'Approved by Doctor');
+      const rejectedApps = deptApps.filter(a => a.status === 'Rejected by Doctor');
+      const deptRx = prescriptions.filter(p => p.studentDept === dept);
+
+      document.getElementById('statHodTotalApps').innerText = deptApps.length;
+      document.getElementById('statHodApproved').innerText = approvedApps.length;
+      document.getElementById('statHodRejected').innerText = rejectedApps.length;
+      document.getElementById('statHodPrescriptions').innerText = deptRx.length;
+
+      // Render Department Appointments Feed with Delete Option
+      const appTable = document.getElementById('hodAppointmentsTable');
+      if (deptApps.length === 0) {
+        appTable.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No appointment requests logged for ${dept} Department.</td></tr>`;
+      } else {
+        appTable.innerHTML = deptApps.map(a => {
+          let statusBadge = '';
+          if (a.status === 'Approved by Doctor') {
+            statusBadge = `<span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold px-2.5 py-1 rounded-full text-[10px] flex items-center w-fit"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Approved by Doctor</span>`;
+          } else if (a.status === 'Rejected by Doctor') {
+            statusBadge = `<span class="bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 font-bold px-2.5 py-1 rounded-full text-[10px] flex items-center w-fit"><i class="fa-solid fa-circle-xmark mr-1 text-red-600"></i> Rejected by Doctor</span>`;
+          } else {
+            statusBadge = `<span class="bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-bold px-2.5 py-1 rounded-full text-[10px] flex items-center w-fit"><i class="fa-solid fa-clock mr-1 text-amber-600"></i> Pending Approval</span>`;
+          }
+
+          return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+              <td class="p-3">
+                <div class="font-bold text-slate-800 dark:text-slate-100">${a.studentName}</div>
+                <div class="text-[10px] font-mono text-clinic-600 font-bold">ID: ${a.studentId || 'N/A'}</div>
+              </td>
+              <td class="p-3 font-medium">${a.doctorName} <span class="text-[10px] font-mono text-slate-400">(${a.docUserId})</span></td>
+              <td class="p-3">${a.date}<br/><span class="text-slate-400 font-mono text-[10px]">${a.time}</span></td>
+              <td class="p-3">${a.reason}</td>
+              <td class="p-3">${statusBadge}</td>
+              <td class="p-3 text-slate-600 dark:text-slate-300 italic text-[11px]">${a.doctorRemark || '-'}</td>
+              <td class="p-3 text-right">
+                <button onclick="deleteAppointment('${a.id}')" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950/60 dark:text-red-300 rounded text-[11px] font-bold transition flex items-center space-x-1 ml-auto" title="Delete Appointment Record">
+                  <i class="fa-solid fa-trash"></i>
+                  <span>Delete</span>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render Synced Prescription Feed with Download PDF, Print Card, and Delete Options
+      const rxFeedList = document.getElementById('hodPrescriptionFeedList');
+      if (deptRx.length === 0) {
+        rxFeedList.innerHTML = `<div class="col-span-2 p-4 text-center text-slate-400 border border-dashed rounded-xl">No completed prescription records synced for ${dept} Department yet.</div>`;
+      } else {
+        rxFeedList.innerHTML = deptRx.map(p => `
+          <div class="p-4 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl space-y-3 text-xs shadow-sm">
+            <div class="flex justify-between items-start font-bold">
+              <div>
+                <span class="text-purple-700 dark:text-purple-400 font-bold text-sm">${p.studentName}</span>
+                <p class="text-[10px] text-slate-500 font-mono">Student ID: ${p.studentId || 'N/A'} | ${p.studentDept}</p>
+              </div>
+              <span class="bg-purple-200 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold">${p.date}</span>
+            </div>
+            <p><strong>Attending Doctor:</strong> ${p.doctorName}</p>
+            <p><strong>Diagnosis:</strong> <span class="text-slate-700 dark:text-slate-300 font-semibold">${p.diagnosis}</span></p>
+            <div class="p-2.5 bg-white dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 font-mono text-[11px] border">
+              ${p.medicines}
+            </div>
+            <p class="text-[11px] text-slate-500"><strong>Advice:</strong> ${p.instructions || 'N/A'}</p>
+            
+            <div class="flex flex-wrap gap-2 pt-2 border-t border-purple-100 dark:border-purple-900/50">
+              <button onclick="downloadPrescriptionPDF('${p.id}')" class="px-2.5 py-1.5 bg-purple-600 text-white rounded-lg text-[11px] font-bold hover:bg-purple-700 transition flex items-center space-x-1">
+                <i class="fa-solid fa-file-arrow-down"></i>
+                <span>Download PDF</span>
+              </button>
+              <button onclick="printPrescriptionCard('${p.id}')" class="px-2.5 py-1.5 bg-slate-800 text-white rounded-lg text-[11px] font-bold hover:bg-slate-900 transition flex items-center space-x-1">
+                <i class="fa-solid fa-print"></i>
+                <span>Print Card</span>
+              </button>
+              <button onclick="deletePrescription('${p.id}')" class="px-2.5 py-1.5 bg-red-600 text-white rounded-lg text-[11px] font-bold hover:bg-red-700 transition flex items-center space-x-1">
+                <i class="fa-solid fa-trash"></i>
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // DOCTOR DASHBOARD RENDER
+    function renderDoctorDashboard() {
+      const docAppsList = document.getElementById('doctorAppointmentsList');
+      const myApps = appointments.filter(a => a.docUserId === currentUser.docUserId || a.doctorName === currentUser.name);
+
+      if (myApps.length === 0) {
+        docAppsList.innerHTML = `<p class="text-xs text-slate-400 p-3 text-center border border-dashed rounded-xl">No appointments booked for you yet.</p>`;
+      } else {
+        docAppsList.innerHTML = myApps.map(a => `
+          <div class="p-3 bg-slate-50 dark:bg-slate-700/50 border rounded-xl space-y-2 text-xs">
+            <div class="flex justify-between items-start font-bold">
+              <span>${a.studentName} <span class="text-[10px] text-clinic-600">(${a.studentId || 'ID'})</span></span>
+              <span class="text-[10px] font-mono text-slate-400">${a.time}</span>
+            </div>
+            <p class="text-slate-500">Dept: <strong>${a.studentDept}</strong> | Reason: ${a.reason}</p>
+            <p class="text-[11px]">Status: <strong>${a.status}</strong></p>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${a.status !== 'Approved by Doctor' ? `<button onclick="doctorApproveAppointment('${a.id}')" class="px-2 py-1 bg-emerald-600 text-white text-[10px] rounded font-bold hover:bg-emerald-700"><i class="fa-solid fa-check mr-1"></i>Approve</button>` : ''}
+              ${a.status !== 'Rejected by Doctor' ? `<button onclick="doctorRejectAppointment('${a.id}')" class="px-2 py-1 bg-amber-600 text-white text-[10px] rounded font-bold hover:bg-amber-700"><i class="fa-solid fa-xmark mr-1"></i>Reject</button>` : ''}
+              <button onclick="deleteAppointment('${a.id}')" class="px-2 py-1 bg-red-600 text-white text-[10px] rounded font-bold hover:bg-red-700"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // History of Issued Prescriptions in Doctor Workspace
+      const docRxHistory = document.getElementById('doctorPrescriptionsHistory');
+      const myRx = prescriptions.filter(p => p.doctorName === currentUser.name);
+
+      if (myRx.length === 0) {
+        docRxHistory.innerHTML = `<p class="text-xs text-slate-400 p-3 text-center border border-dashed rounded-xl">No prescriptions issued by you yet.</p>`;
+      } else {
+        docRxHistory.innerHTML = myRx.map(p => `
+          <div class="p-3 bg-slate-50 dark:bg-slate-700/50 border rounded-xl space-y-2 text-xs">
+            <div class="flex justify-between items-start font-bold">
+              <span>${p.studentName} <span class="text-[10px] text-purple-600 font-mono">(${p.studentDept})</span></span>
+              <span class="text-[10px] font-mono text-slate-400">${p.date}</span>
+            </div>
+            <p class="text-slate-600 dark:text-slate-300"><strong>Diagnosis:</strong> ${p.diagnosis}</p>
+            <div class="p-2 bg-white dark:bg-slate-800 rounded font-mono text-[11px] border">${p.medicines}</div>
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button onclick="downloadPrescriptionPDF('${p.id}')" class="px-2 py-1 bg-purple-600 text-white rounded text-[10px] font-bold hover:bg-purple-700"><i class="fa-solid fa-file-arrow-down mr-1"></i>Download PDF</button>
+              <button onclick="printPrescriptionCard('${p.id}')" class="px-2 py-1 bg-slate-800 text-white rounded text-[10px] font-bold hover:bg-slate-900"><i class="fa-solid fa-print mr-1"></i>Print</button>
+              <button onclick="deletePrescription('${p.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      populateDoctorDropdown();
+    }
+
+    function handleCreatePrescription(e) {
+      e.preventDefault();
+      const studentEmail = document.getElementById('rxStudentSelect').value;
+      const student = users.find(u => u.email === studentEmail);
+
+      const diagnosis = document.getElementById('rxDiagnosis').value;
+      const medicines = document.getElementById('rxMedicines').value;
+      const amount = parseFloat(document.getElementById('rxAmount').value) || 0;
+      const instructions = document.getElementById('rxInstructions').value;
+
+      const newRx = {
+        id: 'rx-' + Date.now(),
+        studentName: student ? student.name : 'Student',
+        studentEmail: studentEmail,
+        studentId: student ? (student.studentId || 'STU-ID') : 'STU-ID',
+        studentDept: student ? (student.dept || 'Computer Science') : 'Computer Science',
+        doctorName: currentUser ? currentUser.name : 'Dr. Doctor',
+        diagnosis,
+        medicines,
+        instructions,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      prescriptions.push(newRx);
+
+      // Create associated Bill Draft
+      const newBill = {
+        id: 'BILL-' + Math.floor(1000 + Math.random() * 9000),
+        studentName: newRx.studentName,
+        studentEmail: newRx.studentEmail,
+        doctorName: newRx.doctorName,
+        medicines: medicines,
+        amount: amount,
+        doctorApproved: true,
+        adminGenerated: true,
+        paymentStatus: 'Pending Payment',
+        paymentMethod: '',
+        date: newRx.date
+      };
+
+      bills.push(newBill);
+      saveData();
+      document.getElementById('prescriptionForm').reset();
+      renderDoctorDashboard();
+      showToast(`Prescription issued & synced to ${newRx.studentDept} HOD feed! Bill created.`, 'success');
+    }
+
+    // STUDENT DASHBOARD RENDER
+    function renderStudentDashboard() {
+      const myAppsList = document.getElementById('studentAppointmentsList');
+      const myApps = appointments.filter(a => a.studentEmail === currentUser.email);
+
+      if (myApps.length === 0) {
+        myAppsList.innerHTML = `<p class="text-xs text-slate-400 p-3 text-center border border-dashed rounded-xl">You have no booked appointments.</p>`;
+      } else {
+        myAppsList.innerHTML = myApps.map(a => `
+          <div class="p-3 bg-slate-50 dark:bg-slate-700/50 border rounded-xl space-y-2 text-xs">
+            <div class="flex justify-between items-start font-bold">
+              <span>${a.doctorName} <span class="text-[10px] text-slate-400">(${a.docUserId})</span></span>
+              <span class="text-[10px] font-mono text-clinic-600">${a.date} | ${a.time}</span>
+            </div>
+            <p><strong>Reason:</strong> ${a.reason}</p>
+            <p><strong>Status:</strong> <span class="font-bold text-clinic-600">${a.status}</span></p>
+            <p class="text-[11px] text-slate-500 italic">Doctor Remark: ${a.doctorRemark || 'None'}</p>
+            <button onclick="deleteAppointment('${a.id}')" class="px-2 py-1 bg-red-600 text-white text-[10px] rounded font-bold hover:bg-red-700"><i class="fa-solid fa-trash mr-1"></i>Delete Request</button>
+          </div>
+        `).join('');
+      }
+
+      // Prescriptions and Bills for Student
+      const myBillsList = document.getElementById('studentBillsList');
+      const myRxList = prescriptions.filter(p => p.studentEmail === currentUser.email);
+      const myBills = bills.filter(b => b.studentEmail === currentUser.email);
+
+      if (myRxList.length === 0 && myBills.length === 0) {
+        myBillsList.innerHTML = `<p class="text-xs text-slate-400 p-3 text-center border border-dashed rounded-xl">No prescriptions or bills generated for you yet.</p>`;
+      } else {
+        myBillsList.innerHTML = myRxList.map(p => {
+          const associatedBill = myBills.find(b => b.date === p.date);
+          return `
+            <div class="p-3 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl space-y-2 text-xs">
+              <div class="flex justify-between items-start font-bold">
+                <span class="text-purple-700 dark:text-purple-400">${p.doctorName}</span>
+                <span class="text-[10px] font-mono text-slate-400">${p.date}</span>
+              </div>
+              <p><strong>Diagnosis:</strong> ${p.diagnosis}</p>
+              <div class="p-2 bg-white dark:bg-slate-800 rounded font-mono text-[11px] border">${p.medicines}</div>
+              <p class="text-[11px] text-slate-500"><strong>Advice:</strong> ${p.instructions || 'N/A'}</p>
+              ${associatedBill ? `<p><strong>Bill Amount:</strong> ₹${associatedBill.amount} | <span class="font-bold text-emerald-600">${associatedBill.paymentStatus}</span></p>` : ''}
+              <div class="flex flex-wrap gap-2 pt-1">
+                <button onclick="downloadPrescriptionPDF('${p.id}')" class="px-2.5 py-1 bg-purple-600 text-white rounded text-[10px] font-bold hover:bg-purple-700"><i class="fa-solid fa-file-arrow-down mr-1"></i>Download PDF</button>
+                <button onclick="printPrescriptionCard('${p.id}')" class="px-2.5 py-1 bg-slate-800 text-white rounded text-[10px] font-bold hover:bg-slate-900"><i class="fa-solid fa-print mr-1"></i>Print Card</button>
+                ${associatedBill && associatedBill.paymentStatus === 'Pending Payment' ? `<button onclick="openPaymentModal('${associatedBill.id}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded text-[10px] font-bold hover:bg-emerald-700"><i class="fa-solid fa-credit-card mr-1"></i>Pay Now</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // ADMIN DASHBOARD & TABLES RENDER
+    function renderAdminDashboard() {
+      const pendingUsers = users.filter(u => u.status === 'Pending');
+      const activeStudents = users.filter(u => u.role === 'Student' && u.status === 'Approved');
+      const totalDoctors = users.filter(u => u.role === 'Doctor');
+
+      document.getElementById('statPendingUsers').innerText = pendingUsers.length;
+      document.getElementById('statActiveStudents').innerText = activeStudents.length;
+      document.getElementById('statTotalDoctors').innerText = totalDoctors.length;
+      document.getElementById('statTotalStaff').innerText = staffList.length;
+
+      // Staff Database Table
+      const staffTable = document.getElementById('adminStaffTable');
+      if (staffList.length === 0) {
+        staffTable.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No staff records in database.</td></tr>`;
+      } else {
+        staffTable.innerHTML = staffList.map(s => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+            <td class="p-3">${getAvatarHtml(s.profilePic, s.name)}</td>
+            <td class="p-3 font-bold">${s.name}</td>
+            <td class="p-3 font-mono text-purple-600 font-bold">${s.id}</td>
+            <td class="p-3">${s.role}</td>
+            <td class="p-3 font-mono">${s.phone}</td>
+            <td class="p-3">${s.shift}</td>
+            <td class="p-3 text-right">
+              <button onclick="deleteStaff('${s.id}')" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-[11px] font-bold">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Bills Table
+      const adminBillsTable = document.getElementById('adminBillsTable');
+      if (bills.length === 0) {
+        adminBillsTable.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No medicine bills issued yet.</td></tr>`;
+      } else {
+        adminBillsTable.innerHTML = bills.map(b => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+            <td class="p-3 font-mono font-bold text-clinic-600">${b.id}</td>
+            <td class="p-3 font-semibold">${b.studentName}</td>
+            <td class="p-3 font-mono text-[11px]">${b.medicines.replace(/\n/g, ', ')}</td>
+            <td class="p-3 font-bold">₹${b.amount}</td>
+            <td class="p-3"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${b.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${b.paymentStatus}</span></td>
+            <td class="p-3 text-right">
+              <button onclick="deleteBill('${b.id}')" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-[11px] font-bold">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Pending Approvals Table
+      const pendingTable = document.getElementById('pendingUsersTable');
+      if (pendingUsers.length === 0) {
+        pendingTable.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No pending registrations requiring approval.</td></tr>`;
+      } else {
+        pendingTable.innerHTML = pendingUsers.map(u => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+            <td class="p-3">${getAvatarHtml(u.profilePic, u.name)}</td>
+            <td class="p-3 font-bold">${u.name}</td>
+            <td class="p-3 font-mono">${u.email}</td>
+            <td class="p-3 font-semibold text-clinic-600">${u.role}</td>
+            <td class="p-3 font-mono">${u.studentId || u.docUserId || u.hodId || 'N/A'}</td>
+            <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] rounded-full font-bold">Pending</span></td>
+            <td class="p-3 text-right space-x-1">
+              <button onclick="approveUser('${u.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[11px] font-bold">Approve</button>
+              <button onclick="deleteUser('${u.id}')" class="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-bold">Reject</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // All Users Table
+      const allUsersTable = document.getElementById('allUsersTable');
+      allUsersTable.innerHTML = users.map(u => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+          <td class="p-3">${getAvatarHtml(u.profilePic, u.name)}</td>
+          <td class="p-3 font-bold">${u.name}</td>
+          <td class="p-3 font-mono">${u.email}</td>
+          <td class="p-3 font-semibold text-clinic-600">${u.role}</td>
+          <td class="p-3 font-mono">${u.dept || u.studentId || u.docUserId || u.hodId || '-'}</td>
+          <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] rounded-full font-bold">${u.status}</span></td>
+          <td class="p-3 text-right">
+            ${u.role !== 'Super Admin' ? `<button onclick="deleteUser('${u.id}')" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-[11px] font-bold">Delete</button>` : '<span class="text-slate-400 italic">Protected</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function approveUser(userId) {
+      const u = users.find(x => x.id === userId);
+      if (u) {
+        u.status = 'Approved';
+        saveData();
+        renderAdminDashboard();
+        renderDoctors();
+        populateDoctorDropdown();
+        showToast(`User ${u.name} approved!`, 'success');
+      }
+    }
+
+    // ADMIN STUDENTS SECTION RENDER
+    function renderAdminStudentsSection() {
+      const studentTable = document.getElementById('dedicatedStudentTable');
+      const studentList = users.filter(u => u.role === 'Student');
+
+      if (studentList.length === 0) {
+        studentTable.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No registered students found.</td></tr>`;
+      } else {
+        studentTable.innerHTML = studentList.map(s => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+            <td class="p-3">${getAvatarHtml(s.profilePic, s.name)}</td>
+            <td class="p-3 font-bold">${s.name}</td>
+            <td class="p-3 font-mono text-clinic-600 font-bold">${s.studentId || 'N/A'}</td>
+            <td class="p-3 font-semibold">${s.dept || 'Computer Science'}</td>
+            <td class="p-3 font-mono">${s.email}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${s.status}</span></td>
+            <td class="p-3 text-right">
+              <button onclick="deleteUser('${s.id}')" class="px-2.5 py-1 bg-red-600 text-white rounded text-[11px] font-bold hover:bg-red-700 transition">Delete Student</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // EDIT MEDICINE DETAILS
+    function openEditBillModal(billId) {
+      const bill = bills.find(b => b.id === billId);
+      if (!bill) {
+        showToast('Bill record not found.', 'error');
+        return;
+      }
+      document.getElementById('editBillId').value = bill.id;
+      document.getElementById('editMedicinesText').value = bill.medicines || '';
+      openModal('editBillModal');
+    }
+
+    function handleSaveEditBill(e) {
+      e.preventDefault();
+      const billId = document.getElementById('editBillId').value;
+      const updatedMedicines = document.getElementById('editMedicinesText').value.trim();
+      const bill = bills.find(b => b.id === billId);
+
+      if (!bill) {
+        showToast('Bill record not found.', 'error');
+        return;
+      }
+      if (!updatedMedicines) {
+        showToast('Please enter medicine details.', 'error');
+        return;
+      }
+
+      bill.medicines = updatedMedicines;
+      saveData();
+      closeModal('editBillModal');
+      renderAdminDashboard();
+      showToast('Medicine details updated successfully.', 'success');
+    }
+
+    // PAYMENT MODAL FUNCTIONS
+    function openPaymentModal(billId) {
+      const b = bills.find(x => x.id === billId);
+      if (!b) return;
+      document.getElementById('payBillId').value = b.id;
+      document.getElementById('payAmountDisplay').innerText = `₹${b.amount}`;
+      document.getElementById('payRefDisplay').innerText = `Ref: ${b.id} | ${b.studentName}`;
+      openModal('paymentModal');
+    }
+
+    function togglePaymentMethod(method) {
+      const fields = document.getElementById('onlinePayFields');
+      if (method === 'Cash') {
+        fields.classList.add('hidden');
+      } else {
+        fields.classList.remove('hidden');
+      }
+    }
+
+    function handleCompletePayment(e) {
+      e.preventDefault();
+      const billId = document.getElementById('payBillId').value;
+      const b = bills.find(x => x.id === billId);
+      if (b) {
+        b.paymentStatus = 'Paid';
+        saveData();
+        closeModal('paymentModal');
+        if (currentUser.role === 'Student') renderStudentDashboard();
+        showToast(`Payment of ₹${b.amount} completed successfully!`, 'success');
+      }
+    }
+
+    // HELPER FUNCTIONS
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    function handleForgotPassword() {
+      const email = prompt('Enter your registered email address for password reset:');
+      if (email) {
+        showToast(`Password reset link sent to ${email}`, 'info');
+      }
+    }
+
+    function toggleAiAssistant() {
+      const drawer = document.getElementById('aiAssistantDrawer');
+      drawer.classList.toggle('hidden');
+    }
+
+    function sendAiMessage() {
+      const input = document.getElementById('aiInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chat = document.getElementById('aiChatMessages');
+      chat.innerHTML += `<div class="bg-clinic-600 text-white p-2.5 rounded-xl max-w-[85%] ml-auto text-xs">${text}</div>`;
+      input.value = '';
+
+      setTimeout(() => {
+        let reply = "I'm GEMS AI Health Assistant. For urgent care, call our 24/7 hotline at +91 7520356377 or visit Room 03 at the Campus Health Center.";
+        if (text.toLowerCase().includes('hour') || text.toLowerCase().includes('time')) {
+          reply = "The main campus clinic is open Monday to Saturday from 8:00 AM to 8:00 PM.";
+        } else if (text.toLowerCase().includes('fever') || text.toLowerCase().includes('cold')) {
+          reply = "For fever or cold symptoms, drink plenty of fluids, rest, and book a consultation with Dr. Robert Carter via the portal.";
+        }
+        chat.innerHTML += `<div class="bg-slate-100 dark:bg-slate-700 p-2.5 rounded-xl max-w-[85%] text-slate-700 dark:text-slate-200 text-xs">${reply}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      }, 600);
+    }
+
+    function filterDoctors() {
+      const query = document.getElementById('doctorSearchInput').value.toLowerCase();
+      const approvedDoctors = users.filter(u => u.role === 'Doctor' && u.status === 'Approved');
+      const filtered = approvedDoctors.filter(d => d.name.toLowerCase().includes(query) || (d.spec && d.spec.toLowerCase().includes(query)));
+      
+      const grid = document.getElementById('doctorsGrid');
+      grid.innerHTML = filtered.map(d => `
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+          <div class="flex items-center space-x-4">
+            ${getAvatarHtml(d.profilePic, d.name, "w-14 h-14")}
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${d.name}</h4>
+              <p class="text-xs text-clinic-600 font-medium">${d.spec || 'General Physician'}</p>
+              <p class="text-[10px] text-slate-400 font-mono">User ID: ${d.docUserId || 'DOC-GEN'}</p>
+            </div>
+          </div>
+          <button onclick="handleQuickBook('${d.name}', '${d.docUserId || 'DOC-101'}')" class="w-full py-2 bg-clinic-600 text-white rounded-xl text-xs font-bold hover:bg-clinic-700 transition">
+            Book Appointment
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function filterMedicines() {
+      const query = document.getElementById('medicineSearchInput').value.toLowerCase();
+      const filtered = initialMedicines.filter(m => m.name.toLowerCase().includes(query) || m.usage.toLowerCase().includes(query));
+      const grid = document.getElementById('medicinesGrid');
+      grid.innerHTML = filtered.map(m => `
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+          <div class="flex justify-between items-start">
+            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${m.name}</h4>
+            <span class="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded font-semibold text-slate-600 dark:text-slate-300">${m.category}</span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-300"><strong>Usage:</strong> ${m.usage}</p>
+          <p class="text-[11px] text-amber-600 dark:text-amber-400"><strong>Warning:</strong> ${m.warning}</p>
+        </div>
+      `).join('');
+    }
+
+    function registerForCamp(title) {
+      if (!currentUser) {
+        showToast('Please login to register for health camps.', 'info');
+        openModal('loginModal');
+        return;
+      }
+      showToast(`Successfully registered for ${title}! Confirmation sent to your email.`, 'success');
+    }
+
+    function simulateCheckIn() {
+      closeModal('checkInModal');
+      const token = 'A-' + Math.floor(15 + Math.random() * 20);
+      document.getElementById('liveTokenDisplay').innerText = token;
+      showToast(`Check-in successful! Your OPD Token is ${token}. Please proceed to Room 03.`, 'success');
+    }
+
+    function changeLanguage(lang) {
+      showToast(`Language set to ${lang.toUpperCase()}`, 'info');
+    }
+  </script>
+</body>
+</html>
